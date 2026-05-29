@@ -712,3 +712,45 @@ contract ChickCombo {
         });
         _species[44] = SpeciesGene({
             label: bytes32(0x47616c6553686172640000000000000000000000000000000000000000000000),
+            baseMight: 11,
+            baseGuard: 10,
+            baseTempo: 10,
+            element: 4
+        });
+        _species[45] = SpeciesGene({
+            label: bytes32(0x4d6172736857617264656e000000000000000000000000000000000000000000),
+            baseMight: 9,
+            baseGuard: 12,
+            baseTempo: 10,
+            element: 3
+        });
+        _species[46] = SpeciesGene({
+            label: bytes32(0x436f72616c43616c6c6572000000000000000000000000000000000000000000),
+            baseMight: 8,
+            baseGuard: 11,
+            baseTempo: 12,
+            element: 2
+        });
+        _species[47] = SpeciesGene({
+            label: bytes32(0x456d6265725661756c7400000000000000000000000000000000000000000000),
+            baseMight: 12,
+            baseGuard: 11,
+            baseTempo: 8,
+            element: 1
+        });
+        _species[48] = SpeciesGene({
+            label: bytes32(0x49726f6e46656174686572000000000000000000000000000000000000000000),
+            baseMight: 10,
+            baseGuard: 14,
+            baseTempo: 7,
+            element: 6
+        });
+        _species[49] = SpeciesGene({
+            label: bytes32(0x566f6964596f6c6b000000000000000000000000000000000000000000000000),
+            baseMight: 13,
+            baseGuard: 8,
+            baseTempo: 11,
+            element: 7
+        });
+    }
+}
