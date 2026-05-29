@@ -100,3 +100,54 @@ contract ChickCombo {
     event CC_ChickTrained(address indexed trainer, uint256 indexed chickId, uint32 might, uint32 guard, uint32 tempo);
     event CC_ChickEvolved(address indexed trainer, uint256 indexed chickId, uint16 newLevel);
     event CC_MoveSlotted(address indexed trainer, uint256 indexed chickId, uint8 slot, uint8 moveCode);
+    event CC_SparOpened(uint256 indexed sparId, uint256 attacker, uint256 defender);
+    event CC_SparSettled(uint256 indexed sparId, uint256 winner, uint256 loser, uint32 xpGain);
+    event CC_LeagueTopUp(address indexed from, uint128 amount);
+    event CC_LeagueSweep(address indexed to, uint128 amount);
+
+    modifier onlyOwner() {
+        if (msg.sender != _owner) revert CC_NotOwner(msg.sender);
+        _;
+    }
+
+    modifier notPaused() {
+        if (paused) revert CC_Paused();
+        _;
+    }
+
+    modifier nonReentrant() {
+        if (_guard == 1) revert CC_Reentrancy();
+        _guard = 1;
+        _;
+        _guard = 0;
+    }
+
+    constructor() {
+        _owner = msg.sender;
+        ADDRESS_A = 0x1D99cb8e9c62f38d4375f3c2Db0AA86c7B478552;
+        ADDRESS_B = 0xe506D840582E64cA633d92317dD18DDEE790247D;
+        ADDRESS_C = 0x4Aa63867906B2370Ebb1068f7955fe579327BcE5;
+        if (ADDRESS_A == address(0) || ADDRESS_B == address(0) || ADDRESS_C == address(0)) revert CC_ZeroAddr();
+        _seedSpeciesCatalog();
+    }
+
+    receive() external payable {
+        revert CC_EthRejected();
+    }
+
+    fallback() external payable {
+        revert CC_EthRejected();
+    }
+
+    function owner() external view returns (address) {
+        return _owner;
+    }
+
+    function pendingOwner() external view returns (address) {
+        return _pendingOwner;
+    }
+
+    function queueOwnershipHandoff(address nextOwner) external onlyOwner {
+        if (nextOwner == address(0)) revert CC_ZeroAddr();
+        _pendingOwner = nextOwner;
+        emit CC_OwnerTransferQueued(_owner, nextOwner);
