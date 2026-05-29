@@ -406,3 +406,54 @@ contract ChickCombo {
             loser = attackerId;
             xpGain = 20 + uint32(entropy % 12);
         }
+    }
+
+    function _seedSpeciesCatalog() private {
+        _species[1] = SpeciesGene({
+            label: bytes32(0x456d626572506565700000000000000000000000000000000000000000000000),
+            baseMight: 11,
+            baseGuard: 9,
+            baseTempo: 10,
+            element: 1
+        });
+        _species[2] = SpeciesGene({
+            label: bytes32(0x41717561436c75636b0000000000000000000000000000000000000000000000),
+            baseMight: 9,
+            baseGuard: 11,
+            baseTempo: 10,
+            element: 2
+        });
+        _species[3] = SpeciesGene({
+            label: bytes32(0x4c65616657696e67000000000000000000000000000000000000000000000000),
+            baseMight: 10,
+            baseGuard: 10,
+            baseTempo: 11,
+            element: 3
+        });
+        _species[4] = SpeciesGene({
+            label: bytes32(0x537061726b48656e000000000000000000000000000000000000000000000000),
+            baseMight: 12,
+            baseGuard: 8,
+            baseTempo: 11,
+            element: 4
+        });
+        _species[5] = SpeciesGene({
+            label: bytes32(0x46726f737442726f6f6400000000000000000000000000000000000000000000),
+            baseMight: 8,
+            baseGuard: 12,
+            baseTempo: 9,
+            element: 5
+        });
+        _species[6] = SpeciesGene({
+            label: bytes32(0x53746f6e65526f6f737400000000000000000000000000000000000000000000),
+            baseMight: 10,
+            baseGuard: 13,
+            baseTempo: 7,
+            element: 6
+        });
+        _species[7] = SpeciesGene({
+            label: bytes32(0x47616c6550756c6c657400000000000000000000000000000000000000000000),
+            baseMight: 11,
+            baseGuard: 8,
+            baseTempo: 12,
+            element: 1
