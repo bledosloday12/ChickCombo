@@ -661,3 +661,54 @@ contract ChickCombo {
             baseTempo: 10,
             element: 5
         });
+        _species[37] = SpeciesGene({
+            label: bytes32(0x536f6c6172466c61726500000000000000000000000000000000000000000000),
+            baseMight: 15,
+            baseGuard: 8,
+            baseTempo: 9,
+            element: 1
+        });
+        _species[38] = SpeciesGene({
+            label: bytes32(0x4162797373616c436c75636b0000000000000000000000000000000000000000),
+            baseMight: 9,
+            baseGuard: 11,
+            baseTempo: 11,
+            element: 2
+        });
+        _species[39] = SpeciesGene({
+            label: bytes32(0x56657264616e74537472696b6500000000000000000000000000000000000000),
+            baseMight: 11,
+            baseGuard: 9,
+            baseTempo: 11,
+            element: 3
+        });
+        _species[40] = SpeciesGene({
+            label: bytes32(0x53746f726d437265737400000000000000000000000000000000000000000000),
+            baseMight: 13,
+            baseGuard: 9,
+            baseTempo: 10,
+            element: 4
+        });
+        _species[41] = SpeciesGene({
+            label: bytes32(0x4f6273696469616e42726f6f6400000000000000000000000000000000000000),
+            baseMight: 10,
+            baseGuard: 13,
+            baseTempo: 8,
+            element: 6
+        });
+        _species[42] = SpeciesGene({
+            label: bytes32(0x4c756d656e506565700000000000000000000000000000000000000000000000),
+            baseMight: 9,
+            baseGuard: 10,
+            baseTempo: 12,
+            element: 8
+        });
+        _species[43] = SpeciesGene({
+            label: bytes32(0x4475736b52756e6e657200000000000000000000000000000000000000000000),
+            baseMight: 12,
+            baseGuard: 9,
+            baseTempo: 10,
+            element: 7
+        });
+        _species[44] = SpeciesGene({
+            label: bytes32(0x47616c6553686172640000000000000000000000000000000000000000000000),
