@@ -49,3 +49,54 @@ contract ChickCombo {
         uint16 baseTempo;
         uint8 element;
     }
+
+    struct SparTicket {
+        uint256 attackerId;
+        uint256 defenderId;
+        uint64 openedAt;
+        bool settled;
+    }
+
+    address private _owner;
+    address private _pendingOwner;
+    bool public paused;
+    uint256 private _guard;
+    uint256 public nextChickId = 1;
+    uint256 public sparNonce;
+    uint128 public leaguePot;
+
+    mapping(uint256 => ChickProfile) private _chicks;
+    mapping(uint256 => address) public chickTrainer;
+    mapping(address => uint256[]) private _trainerRoster;
+    mapping(uint8 => SpeciesGene) private _species;
+    mapping(uint256 => mapping(uint8 => uint8)) private _moveRanks;
+    mapping(uint256 => uint256) public chickStreak;
+    mapping(uint256 => SparTicket) private _openSpar;
+
+    error CC_NotOwner(address caller);
+    error CC_NotPending(address caller);
+    error CC_Reentrancy();
+    error CC_Paused();
+    error CC_ZeroAddr();
+    error CC_NoChick(uint256 chickId);
+    error CC_NotTrainer(address who, uint256 chickId);
+    error CC_BadSpecies(uint16 speciesId);
+    error CC_BadMoveSlot(uint8 slot);
+    error CC_EvolveNotReady(uint32 xp, uint16 level);
+    error CC_LevelCap(uint16 have, uint16 cap);
+    error CC_Cooldown(uint64 readyAfter);
+    error CC_GrainLow(uint32 have, uint32 need);
+    error CC_SparSelf();
+    error CC_SparUnsettled(uint256 sparId);
+    error CC_SparMissing(uint256 sparId);
+    error CC_BadNickname();
+    error CC_EthRejected();
+
+    event CC_OwnerTransferQueued(address indexed from, address indexed to);
+    event CC_OwnerTransferred(address indexed from, address indexed to);
+    event CC_PauseSet(address indexed who, bool on);
+    event CC_ChickMinted(address indexed trainer, uint256 indexed chickId, uint16 speciesId);
+    event CC_ChickFed(address indexed trainer, uint256 indexed chickId, uint32 grain, uint32 vitality);
+    event CC_ChickTrained(address indexed trainer, uint256 indexed chickId, uint32 might, uint32 guard, uint32 tempo);
+    event CC_ChickEvolved(address indexed trainer, uint256 indexed chickId, uint16 newLevel);
+    event CC_MoveSlotted(address indexed trainer, uint256 indexed chickId, uint8 slot, uint8 moveCode);
