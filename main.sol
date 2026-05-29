@@ -202,3 +202,54 @@ contract ChickCombo {
             lastTrained: uint64(block.timestamp),
             lastSpar: uint64(block.timestamp),
             mintedAt: uint64(block.timestamp),
+            nickname: nickname,
+            evolved: false
+        });
+        chickTrainer[chickId] = msg.sender;
+        _trainerRoster[msg.sender].push(chickId);
+        _primeMoves(chickId, gene.element);
+        emit CC_ChickMinted(msg.sender, chickId, speciesId);
+    }
+
+    function renameChick(uint256 chickId, bytes32 nickname) external notPaused {
+        if (nickname == bytes32(0)) revert CC_BadNickname();
+        ChickProfile storage c = _loadChick(chickId);
+        if (chickTrainer[chickId] != msg.sender) revert CC_NotTrainer(msg.sender, chickId);
+        c.nickname = nickname;
+    }
+
+    function feedChick(uint256 chickId, uint32 spend) external notPaused nonReentrant {
+        ChickProfile storage c = _loadChick(chickId);
+        if (chickTrainer[chickId] != msg.sender) revert CC_NotTrainer(msg.sender, chickId);
+        if (block.timestamp < c.lastFed + CC_FEED_COOLDOWN) {
+            revert CC_Cooldown(c.lastFed + CC_FEED_COOLDOWN);
+        }
+        if (c.grain < spend) revert CC_GrainLow(c.grain, spend);
+        c.grain -= spend;
+        uint32 bump = spend / 3 + 2;
+        c.vitality += bump;
+        c.lastFed = uint64(block.timestamp);
+        emit CC_ChickFed(msg.sender, chickId, spend, c.vitality);
+    }
+
+    function trainChick(uint256 chickId) external notPaused nonReentrant {
+        ChickProfile storage c = _loadChick(chickId);
+        if (chickTrainer[chickId] != msg.sender) revert CC_NotTrainer(msg.sender, chickId);
+        if (block.timestamp < c.lastTrained + CC_TRAIN_COOLDOWN) {
+            revert CC_Cooldown(c.lastTrained + CC_TRAIN_COOLDOWN);
+        }
+        if (c.grain < 6) revert CC_GrainLow(c.grain, 6);
+        c.grain -= 6;
+        uint8 pick = uint8(uint256(keccak256(abi.encodePacked(CC_SALT_A, chickId, block.prevrandao, c.level))) % 3);
+        if (pick == 0) c.might += 1;
+        else if (pick == 1) c.guard += 1;
+        else c.tempo += 1;
+        c.xp += 14;
+        c.lastTrained = uint64(block.timestamp);
+        _levelSync(c);
+        emit CC_ChickTrained(msg.sender, chickId, c.might, c.guard, c.tempo);
+    }
+
+    function forageGrain(uint256 chickId) external notPaused {
+        ChickProfile storage c = _loadChick(chickId);
+        if (chickTrainer[chickId] != msg.sender) revert CC_NotTrainer(msg.sender, chickId);
