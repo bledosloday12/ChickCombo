@@ -304,3 +304,54 @@ contract ChickCombo {
         SparTicket storage t = _openSpar[sparId];
         if (t.openedAt == 0) revert CC_SparMissing(sparId);
         if (t.settled) revert CC_SparUnsettled(sparId);
+        ChickProfile storage a = _chicks[t.attackerId];
+        ChickProfile storage d = _chicks[t.defenderId];
+        if (chickTrainer[t.attackerId] != msg.sender) revert CC_NotTrainer(msg.sender, t.attackerId);
+        (uint256 winner, uint256 loser, uint32 xpGain) =
+            _resolveSpar(t.attackerId, t.defenderId, a, d, sparId);
+        t.settled = true;
+        ChickProfile storage w = _chicks[winner];
+        w.xp += xpGain;
+        chickStreak[winner] += 1;
+        chickStreak[loser] = 0;
+        _levelSync(w);
+        emit CC_SparSettled(sparId, winner, loser, xpGain);
+    }
+
+    function grantBonusGrain(address trainer, uint256 chickId, uint32 amount) external notPaused {
+        if (msg.sender != ADDRESS_A && msg.sender != _owner) revert CC_NotOwner(msg.sender);
+        ChickProfile storage c = _loadChick(chickId);
+        if (chickTrainer[chickId] != trainer) revert CC_NotTrainer(trainer, chickId);
+        c.grain += amount;
+    }
+
+    function rosterSize(address trainer) external view returns (uint256) {
+        return _trainerRoster[trainer].length;
+    }
+
+    function rosterSlot(address trainer, uint256 idx) external view returns (uint256 chickId) {
+        chickId = _trainerRoster[trainer][idx];
+    }
+
+    function readChick(uint256 chickId) external view returns (ChickProfile memory) {
+        if (_chicks[chickId].mintedAt == 0) revert CC_NoChick(chickId);
+        return _chicks[chickId];
+    }
+
+    function readSpecies(uint8 speciesId) external view returns (SpeciesGene memory) {
+        return _species[speciesId];
+    }
+
+    function moveAt(uint256 chickId, uint8 slot) external view returns (uint8) {
+        return _moveRanks[chickId][slot];
+    }
+
+    function typeAdvantage(uint8 atkElem, uint8 defElem) public pure returns (int8) {
+        if (atkElem == defElem) return 0;
+        if ((atkElem == 1 && defElem == 3) || (atkElem == 3 && defElem == 2) || (atkElem == 2 && defElem == 1)) return 1;
+        if ((atkElem == 4 && defElem == 2) || (atkElem == 2 && defElem == 5) || (atkElem == 5 && defElem == 4)) return 1;
+        if ((atkElem == 6 && defElem == 4) || (atkElem == 4 && defElem == 7) || (atkElem == 7 && defElem == 6)) return 1;
+        if ((atkElem == 8 && defElem == 7) || (atkElem == 7 && defElem == 1) || (atkElem == 1 && defElem == 8)) return 1;
+        if ((defElem == 1 && atkElem == 3) || (defElem == 3 && atkElem == 2) || (defElem == 2 && atkElem == 1)) return -1;
+        if ((defElem == 4 && atkElem == 2) || (defElem == 2 && atkElem == 5) || (defElem == 5 && atkElem == 4)) return -1;
+        if ((defElem == 6 && atkElem == 4) || (defElem == 4 && atkElem == 7) || (defElem == 7 && atkElem == 6)) return -1;
