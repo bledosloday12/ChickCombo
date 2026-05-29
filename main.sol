@@ -151,3 +151,54 @@ contract ChickCombo {
         if (nextOwner == address(0)) revert CC_ZeroAddr();
         _pendingOwner = nextOwner;
         emit CC_OwnerTransferQueued(_owner, nextOwner);
+    }
+
+    function acceptOwnership() external {
+        if (msg.sender != _pendingOwner) revert CC_NotPending(msg.sender);
+        address prev = _owner;
+        _owner = msg.sender;
+        _pendingOwner = address(0);
+        emit CC_OwnerTransferred(prev, msg.sender);
+    }
+
+    function setPaused(bool on) external onlyOwner {
+        paused = on;
+        emit CC_PauseSet(msg.sender, on);
+    }
+
+    function donateLeague() external payable notPaused nonReentrant {
+        if (msg.value == 0) revert CC_EthRejected();
+        leaguePot += uint128(msg.value);
+        emit CC_LeagueTopUp(msg.sender, uint128(msg.value));
+    }
+
+    function sweepLeague(address payable to, uint128 amount) external onlyOwner nonReentrant {
+        if (to == address(0)) revert CC_ZeroAddr();
+        if (amount > leaguePot) amount = leaguePot;
+        leaguePot -= amount;
+        (bool ok, ) = to.call{value: amount}("");
+        if (!ok) revert CC_EthRejected();
+        emit CC_LeagueSweep(to, amount);
+    }
+
+    function mintChick(uint16 speciesId, bytes32 nickname) external notPaused nonReentrant returns (uint256 chickId) {
+        if (speciesId == 0 || speciesId > 49) revert CC_BadSpecies(speciesId);
+        SpeciesGene memory gene = _species[uint8(speciesId)];
+        if (gene.baseMight == 0) revert CC_BadSpecies(speciesId);
+        if (nickname == bytes32(0)) revert CC_BadNickname();
+        chickId = nextChickId++;
+        uint32 baseVit = uint32(gene.baseMight + gene.baseGuard + gene.baseTempo);
+        _chicks[chickId] = ChickProfile({
+            speciesId: speciesId,
+            level: 1,
+            xp: 0,
+            grain: 48,
+            vitality: baseVit,
+            might: gene.baseMight,
+            guard: gene.baseGuard,
+            tempo: gene.baseTempo,
+            element: gene.element,
+            lastFed: uint64(block.timestamp),
+            lastTrained: uint64(block.timestamp),
+            lastSpar: uint64(block.timestamp),
+            mintedAt: uint64(block.timestamp),
