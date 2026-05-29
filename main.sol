@@ -253,3 +253,54 @@ contract ChickCombo {
     function forageGrain(uint256 chickId) external notPaused {
         ChickProfile storage c = _loadChick(chickId);
         if (chickTrainer[chickId] != msg.sender) revert CC_NotTrainer(msg.sender, chickId);
+        uint256 mix = uint256(keccak256(abi.encodePacked(CC_SALT_B, chickId, block.number, msg.sender)));
+        uint32 gain = uint32(6 + (mix % 11));
+        c.grain += gain;
+    }
+
+    function evolveIfReady(uint256 chickId) external notPaused nonReentrant {
+        ChickProfile storage c = _loadChick(chickId);
+        if (chickTrainer[chickId] != msg.sender) revert CC_NotTrainer(msg.sender, chickId);
+        if (c.level < 18 || c.evolved) revert CC_EvolveNotReady(c.xp, c.level);
+        if (c.xp < 900) revert CC_EvolveNotReady(c.xp, c.level);
+        c.evolved = true;
+        c.might += 3;
+        c.guard += 3;
+        c.tempo += 2;
+        c.vitality += 20;
+        emit CC_ChickEvolved(msg.sender, chickId, c.level);
+    }
+
+    function slotMove(uint256 chickId, uint8 slot, uint8 moveCode) external notPaused {
+        if (slot >= CC_MOVE_SLOTS) revert CC_BadMoveSlot(slot);
+        ChickProfile storage c = _loadChick(chickId);
+        if (chickTrainer[chickId] != msg.sender) revert CC_NotTrainer(msg.sender, chickId);
+        if (moveCode == 0 || moveCode > 32) revert CC_BadSpecies(moveCode);
+        _moveRanks[chickId][slot] = moveCode;
+        emit CC_MoveSlotted(msg.sender, chickId, slot, moveCode);
+    }
+
+    function openSpar(uint256 attackerId, uint256 defenderId) external notPaused returns (uint256 sparId) {
+        if (attackerId == defenderId) revert CC_SparSelf();
+        _loadChick(attackerId);
+        _loadChick(defenderId);
+        if (chickTrainer[attackerId] != msg.sender) revert CC_NotTrainer(msg.sender, attackerId);
+        ChickProfile storage a = _chicks[attackerId];
+        if (block.timestamp < a.lastSpar + CC_SPAR_COOLDOWN) {
+            revert CC_Cooldown(a.lastSpar + CC_SPAR_COOLDOWN);
+        }
+        sparId = ++sparNonce;
+        _openSpar[sparId] = SparTicket({
+            attackerId: attackerId,
+            defenderId: defenderId,
+            openedAt: uint64(block.timestamp),
+            settled: false
+        });
+        a.lastSpar = uint64(block.timestamp);
+        emit CC_SparOpened(sparId, attackerId, defenderId);
+    }
+
+    function settleSpar(uint256 sparId) external notPaused nonReentrant {
+        SparTicket storage t = _openSpar[sparId];
+        if (t.openedAt == 0) revert CC_SparMissing(sparId);
+        if (t.settled) revert CC_SparUnsettled(sparId);
