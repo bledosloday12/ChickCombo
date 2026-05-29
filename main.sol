@@ -355,3 +355,54 @@ contract ChickCombo {
         if ((defElem == 1 && atkElem == 3) || (defElem == 3 && atkElem == 2) || (defElem == 2 && atkElem == 1)) return -1;
         if ((defElem == 4 && atkElem == 2) || (defElem == 2 && atkElem == 5) || (defElem == 5 && atkElem == 4)) return -1;
         if ((defElem == 6 && atkElem == 4) || (defElem == 4 && atkElem == 7) || (defElem == 7 && atkElem == 6)) return -1;
+        if ((defElem == 8 && atkElem == 7) || (defElem == 7 && atkElem == 1) || (defElem == 1 && atkElem == 8)) return -1;
+        return 0;
+    }
+
+    function _loadChick(uint256 chickId) private view returns (ChickProfile storage c) {
+        c = _chicks[chickId];
+        if (c.mintedAt == 0) revert CC_NoChick(chickId);
+    }
+
+    function _levelSync(ChickProfile storage c) private {
+        uint16 target = uint16(1 + c.xp / 220);
+        if (target > CC_MAX_LEVEL) target = CC_MAX_LEVEL;
+        if (target > c.level) {
+            uint16 delta = target - c.level;
+            c.level = target;
+            c.vitality += uint32(delta) * 3;
+            c.grain += uint32(delta) * 2;
+        }
+    }
+
+    function _primeMoves(uint256 chickId, uint8 elem) private {
+        _moveRanks[chickId][0] = uint8(1 + (elem % 7));
+        _moveRanks[chickId][1] = uint8(8 + (elem % 5));
+        _moveRanks[chickId][2] = uint8(15 + (elem % 4));
+        _moveRanks[chickId][3] = uint8(22 + (elem % 6));
+    }
+
+    function _resolveSpar(
+        uint256 attackerId,
+        uint256 defenderId,
+        ChickProfile storage a,
+        ChickProfile storage d,
+        uint256 sparId
+    ) private view returns (uint256 winner, uint256 loser, uint32 xpGain) {
+        uint256 entropy = uint256(keccak256(abi.encodePacked(block.prevrandao, sparId, a.mintedAt, d.mintedAt)));
+        int32 scoreA = int32(uint32(a.might + a.tempo / 2));
+        int32 scoreD = int32(uint32(d.guard + d.tempo / 3));
+        int8 adv = typeAdvantage(a.element, d.element);
+        if (adv > 0) scoreA += 7;
+        else if (adv < 0) scoreD += 7;
+        scoreA += int32(uint32(entropy % 9));
+        scoreD += int32(uint32((entropy >> 128) % 9));
+        if (scoreA >= scoreD) {
+            winner = attackerId;
+            loser = defenderId;
+            xpGain = 28 + uint32(entropy % 15);
+        } else {
+            winner = defenderId;
+            loser = attackerId;
+            xpGain = 20 + uint32(entropy % 12);
+        }
